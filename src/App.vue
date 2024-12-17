@@ -2,11 +2,13 @@
   <v-app>
     <v-main>
       <v-container>
-        <v-row
-          ><app-button @action="setNewEmp"
-            >Добавить нового сотрудника</app-button
-          ></v-row
-        >
+        <v-row>
+          <v-col cols="3">
+            <app-button @action="setNewEmp"
+              >Добавить нового сотрудника</app-button
+            >
+          </v-col>
+        </v-row>
         <v-row>
           <v-col cols="3"
             ><emp-list @choose-emp="setCurrentEmp"></emp-list
