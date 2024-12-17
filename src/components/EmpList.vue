@@ -26,10 +26,6 @@ export default {
     },
   },
 
-  data() {
-    return {}
-  },
-
   methods: {
     handle(pass_no) {
       this.$emit("emp-selected", pass_no)
