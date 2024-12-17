@@ -3,7 +3,7 @@
     <v-form
       validate-on="submit lazy"
       ref="form"
-      @submit.prevent="submit(isNew ? 'add' : 'change')"
+      @submit.prevent="submit(isNew ? 'emp-added' : 'emp-changed')"
       v-model="isValid"
     >
       <v-text-field
@@ -43,8 +43,13 @@
 <script>
 import dayjs from "dayjs"
 import AppButton from "./AppButton.vue"
+import { capitalize } from "lodash"
 
 export default {
+  components: {
+    AppButton,
+  },
+
   props: {
     currentEmp: {
       type: Object,
@@ -115,17 +120,22 @@ export default {
     change() {
       this.isChange = true
     },
+    formatFio(fio) {
+      return fio
+        .split(" ")
+        .map((word) => capitalize(word))
+        .join(" ")
+    },
     deleteEmp() {
-      this.$emit("delete")
+      this.$emit("emp-deleted")
     },
     async submit(type) {
       try {
         const isValid = await this.$refs.form.validate()
 
-        console.log(isValid)
         if (isValid) {
           const editCurrentEmp = {
-            fio: this.fio,
+            fio: this.formatFio(this.fio),
             pass_ser: this.pass_ser,
             pass_no: this.pass_no,
             pass_dt: dayjs(this.pass_dt).format("YYYY-MM-DD"),
@@ -157,10 +167,6 @@ export default {
         }
       },
     },
-  },
-
-  components: {
-    AppButton,
   },
 }
 </script>

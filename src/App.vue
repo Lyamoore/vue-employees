@@ -11,15 +11,15 @@
         </v-row>
         <v-row>
           <v-col cols="3"
-            ><emp-list @choose-emp="setCurrentEmp"></emp-list
+            ><emp-list @emp-selected="setCurrentEmp"></emp-list
           ></v-col>
           <v-col cols="3"
             ><emp-form
               :current-emp="currentEmp"
               :is-new="isNew"
-              @change="changeEmp"
-              @add="addEmp"
-              @delete="deleteEmp"
+              @emp-changed="changeEmp"
+              @emp-added="addEmp"
+              @emp-deleted="deleteEmp"
             ></emp-form>
           </v-col>
         </v-row>
@@ -41,6 +41,12 @@ export default {
     AppButton,
     EmpList,
     EmpForm,
+  },
+
+  provide() {
+    return {
+      employees: this.employees,
+    }
   },
 
   data() {
@@ -96,13 +102,10 @@ export default {
         (emp) => emp.pass_no === this.currentEmp.pass_no
       )
       this.employees[idx] = { ...this.employees[idx], ...emp }
-
-      // this.currentEmp = null
     },
     addEmp(emp) {
       this.employees.push(emp)
 
-      // this.currentEmp = null
       this.isNew = false
     },
     deleteEmp() {
@@ -113,14 +116,6 @@ export default {
 
       this.currentEmp = null
     },
-  },
-
-  computed: {},
-
-  provide() {
-    return {
-      employees: this.employees,
-    }
   },
 }
 </script>

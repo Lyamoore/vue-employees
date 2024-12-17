@@ -16,41 +16,30 @@
 export default {
   inject: ["employees"],
 
+  emits: {
+    "emp-selected"(pass_no) {
+      if (pass_no) {
+        return true
+      }
+      console.warn("Не передан pass_no")
+      return false
+    },
+  },
+
   data() {
     return {}
   },
 
   methods: {
     handle(pass_no) {
-      this.$emit("choose-emp", pass_no)
+      this.$emit("emp-selected", pass_no)
     },
     formatFio(fio) {
-      const parts = fio.split(" ")
-      const lastName = parts[0] || ""
-      const firstName = parts[1] || ""
-      const middleName = parts[2] || ""
+      const [lastName, firstName, middleName] = fio.split(" ")
 
-      let formattedFio = lastName
-
-      if (firstName) {
-        formattedFio += ` ${firstName.charAt(0)}.`
-      }
-
-      if (middleName) {
-        formattedFio += ` ${middleName.charAt(0)}.`
-      }
-
-      return formattedFio.trim()
-    },
-  },
-
-  emits: {
-    "choose-emp"(pass_no) {
-      if (pass_no) {
-        return true
-      }
-      console.warn("Не передан pass_no")
-      return false
+      return `${lastName} ${firstName?.charAt(0)}. ${middleName?.charAt(
+        0
+      )}.`.trim()
     },
   },
 }
