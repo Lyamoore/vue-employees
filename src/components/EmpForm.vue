@@ -1,5 +1,5 @@
 <template>
-  <v-sheet class="mx-auto" max-width="300">
+  <v-sheet class="mx-auto" max-width="300" v-if="isShow">
     <v-form validate-on="submit lazy" ref="form">
       <v-text-field v-model="fio" label="ФИО" @change="change"></v-text-field>
       <v-text-field
@@ -19,18 +19,18 @@
       ></v-text-field>
 
       <div v-if="!isNew">
-        <app-button>Удалить</app-button>
-        <app-button v-if="isChange" @action="submit('change')"
+        <app-button @action="deleteEmp">Удалить</app-button>
+        <app-button v-if="isChange" @action="submitEmp('change')"
           >Изменить</app-button
         >
       </div>
-      <app-button v-else @action="submit('add')">Добавить</app-button>
+      <app-button v-else @action="submitEmp('add')">Добавить</app-button>
     </v-form>
   </v-sheet>
 </template>
 
 <script>
-import AppButton from "./AppButton.vue";
+import AppButton from "./AppButton.vue"
 
 export default {
   props: {
@@ -47,6 +47,7 @@ export default {
   data: () => ({
     isChange: false,
     isValid: true,
+    isShow: false,
 
     fio: "",
     pass_ser: "",
@@ -78,10 +79,21 @@ export default {
 
   methods: {
     change() {
-      this.isChange = true;
+      this.isChange = true
     },
-    submit(type) {
-      console.log(type);
+    submitEmp(type) {
+      const editCurrentEmp = {
+        fio: this.fio,
+        pass_ser: this.pass_ser,
+        pass_no: this.pass_no,
+        pass_dt: this.pass_dt,
+      }
+
+      this.$emit(type, editCurrentEmp)
+      this.isChange = false
+    },
+    deleteEmp() {
+      this.$emit("delete")
     },
   },
 
@@ -90,16 +102,15 @@ export default {
       immediate: false,
       handler(emp) {
         if (emp) {
-          this.isChange = false;
-          this.fio = emp.fio;
-          this.pass_ser = emp.pass_ser;
-          this.pass_no = emp.pass_no;
-          this.pass_dt = emp.pass_dt;
+          this.isChange = false
+          this.isShow = true
+
+          this.fio = emp.fio
+          this.pass_ser = emp.pass_ser
+          this.pass_no = emp.pass_no
+          this.pass_dt = emp.pass_dt
         } else {
-          this.fio = "";
-          this.pass_ser = "";
-          this.pass_no = "";
-          this.pass_dt = "";
+          this.isShow = false
         }
       },
     },
@@ -108,6 +119,5 @@ export default {
   components: {
     AppButton,
   },
-};
+}
 </script>
-<style></style>

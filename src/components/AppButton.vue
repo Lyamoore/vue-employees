@@ -6,6 +6,5 @@
 <script>
 export default {
   emits: ["action"],
-};
+}
 </script>
-<style></style>

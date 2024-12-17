@@ -16,24 +16,23 @@ export default {
   inject: ["employees"],
 
   data() {
-    return {};
+    return {}
   },
 
   methods: {
     handle(pass_no) {
-      this.$emit("choose-emp", pass_no);
+      this.$emit("choose-emp", pass_no)
     },
   },
 
   emits: {
     "choose-emp"(pass_no) {
       if (pass_no) {
-        return true;
+        return true
       }
-      console.warn("Не передан pass_no");
-      return false;
+      console.warn("Не передан pass_no")
+      return false
     },
   },
-};
+}
 </script>
-<style></style>
