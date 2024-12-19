@@ -84,8 +84,10 @@ export default {
   },
 
   methods: {
-    setCurrentEmp(pass_no) {
-      this.currentEmp = this.employees.find((emp) => emp.pass_no === pass_no)
+    setCurrentEmp(pass_no, pass_ser) {
+      this.currentEmp = this.employees.find(
+        (emp) => emp.pass_no === pass_no && emp.pass_ser === pass_ser
+      )
       this.isNew = false
     },
     setNewEmp() {
@@ -97,9 +99,12 @@ export default {
       }
       this.isNew = true
     },
+
     changeEmp(emp) {
       const idx = this.employees.findIndex(
-        (emp) => emp.pass_no === this.currentEmp.pass_no
+        (emp) =>
+          emp.pass_no === this.currentEmp.pass_no &&
+          emp.pass_ser === this.currentEmp.pass_ser
       )
       this.employees[idx] = { ...this.employees[idx], ...emp }
     },
@@ -110,7 +115,9 @@ export default {
     },
     deleteEmp() {
       const idx = this.employees.findIndex(
-        (emp) => emp.pass_no === this.currentEmp.pass_no
+        (emp) =>
+          emp.pass_no === this.currentEmp.pass_no &&
+          emp.pass_ser === this.currentEmp.pass_ser
       )
       this.employees.splice(idx, 1)
 

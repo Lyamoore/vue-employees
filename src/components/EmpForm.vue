@@ -128,6 +128,7 @@ export default {
     },
     deleteEmp() {
       this.$emit("emp-deleted")
+      this.isChange = false
     },
     async submit(type) {
       try {
@@ -155,7 +156,6 @@ export default {
       immediate: false,
       handler(emp) {
         if (emp) {
-          this.isChange = false
           this.isShow = true
 
           this.fio = emp.fio

@@ -1,14 +1,15 @@
 <template>
   <v-card class="mx-auto" max-width="300">
-    <v-list>
+    <v-list v-if="employees.length > 0">
       <v-list-item
         v-for="emp in employees"
-        :key="emp.pass_no"
-        @click="handle(emp.pass_no)"
+        :key="`${emp.pass_ser}:${emp.pass_no}`"
+        @click="handle(emp.pass_no, emp.pass_ser)"
       >
         <v-list-item-title>{{ formatFio(emp.fio) }}</v-list-item-title>
       </v-list-item>
     </v-list>
+    <p v-else>Здесь пока нет сотрудников</p>
   </v-card>
 </template>
 
@@ -17,18 +18,18 @@ export default {
   inject: ["employees"],
 
   emits: {
-    "emp-selected"(pass_no) {
-      if (pass_no) {
+    "emp-selected"(pass_no, pass_ser) {
+      if (pass_no && pass_ser) {
         return true
       }
-      console.warn("Не передан pass_no")
+      console.warn("Не передан pass_no или  pass_ser")
       return false
     },
   },
 
   methods: {
-    handle(pass_no) {
-      this.$emit("emp-selected", pass_no)
+    handle(pass_no, pass_ser) {
+      this.$emit("emp-selected", pass_no, pass_ser)
     },
     formatFio(fio) {
       const [lastName, firstName, middleName] = fio.split(" ")
