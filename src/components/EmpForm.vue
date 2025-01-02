@@ -1,172 +1,153 @@
-<template>
-  <v-sheet class="mx-auto" max-width="300" v-if="isShow">
-    <v-form
-      validate-on="submit lazy"
-      ref="form"
-      @submit.prevent="submit(isNew ? 'emp-added' : 'emp-changed')"
-      v-model="isValid"
-    >
-      <v-text-field
-        v-model="fio"
-        label="ФИО"
-        :rules="fioRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_ser"
-        label="Номер паспорта"
-        :rules="pasSerRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_no"
-        label="Серия паспорта"
-        :rules="pasNoRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_dt"
-        label="Дата выдачи: YYYY-MM-DD"
-        :rules="pasDtRules"
-        @change="change"
-      ></v-text-field>
-
-      <div v-if="!isNew">
-        <app-button @action="deleteEmp">Удалить</app-button>
-        <app-button v-if="isChange" type="submit">Изменить</app-button>
-      </div>
-      <app-button v-else type="submit">Добавить</app-button>
-    </v-form>
-  </v-sheet>
-</template>
-
-<script>
-import dayjs from "dayjs"
-import AppButton from "./AppButton.vue"
+<script setup>
+import { ref, watch } from "vue"
 import { capitalize } from "lodash"
+import dayjs from "dayjs"
 
-export default {
-  components: {
-    AppButton,
-  },
+const props = defineProps({
+	currentEmp: {
+		type: Object,
+		required: true,
+	},
+	isNew: {
+		type: Boolean,
+		required: true,
+	},
+})
 
-  props: {
-    currentEmp: {
-      type: Object,
-      required: true,
-    },
-    isNew: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const emit = defineEmits(["emp-added", "emp-changed", "emp-deleted"])
 
-  data: () => ({
-    isChange: false,
-    isValid: false,
-    isShow: false,
+const formRef = ref(null)
+const isChange = ref(false)
+const isValid = ref(false)
+const isShow = ref(false)
 
-    fio: "",
-    pass_ser: "",
-    pass_no: "",
-    pass_dt: "",
+const fio = ref("")
+const pass_ser = ref("")
+const pass_no = ref("")
+const pass_dt = ref("")
 
-    fioRules: [
-      (value) => {
-        if (value) return true
+const fioRules = [(value) => !!value || "Требуется ФИО."]
+const pasSerRules = [
+	(value) => !!value || "Требуется серия паспорта.",
+	(value) =>
+		/^\d{4}$/.test(value) || "Серия паспорта должна состоять из 4 цифр.",
+]
+const pasNoRules = [
+	(value) => !!value || "Требуется номер паспорта.",
+	(value) =>
+		/^\d{6}$/.test(value) || "Номер паспорта должен состоять из 6 цифр.",
+]
+const pasDtRules = [
+	(value) => !!value || "Требуется дата выдачи паспорта.",
+	(value) =>
+		/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+		"Неправильная дата выдачи паспорта.",
+]
 
-        return "Требуется ФИО."
-      },
-    ],
-    pasSerRules: [
-      (value) => {
-        if (value) return true
-
-        return "Требуется серия паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{4}$/.test(value)) return true
-
-        return "Серия паспорта должна состоять из 4 цифр."
-      },
-    ],
-    pasNoRules: [
-      (value) => {
-        if (value) return true
-
-        return "Требуется номер паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{6}$/.test(value)) return true
-
-        return "Номер паспорта должен состоять из 6 цифр."
-      },
-    ],
-    pasDtRules: [
-      (value) => {
-        if (value) return true
-
-        return "Требуется дата выдачи паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) return true
-
-        return "Неправильная дата выдачи паспорта."
-      },
-    ],
-  }),
-
-  methods: {
-    change() {
-      this.isChange = true
-    },
-    formatFio(fio) {
-      return fio
-        .split(" ")
-        .map((word) => capitalize(word))
-        .join(" ")
-    },
-    deleteEmp() {
-      this.$emit("emp-deleted")
-      this.isChange = false
-    },
-    async submit(type) {
-      try {
-        const isValid = await this.$refs.form.validate()
-
-        if (isValid) {
-          const editCurrentEmp = {
-            fio: this.formatFio(this.fio),
-            pass_ser: this.pass_ser,
-            pass_no: this.pass_no,
-            pass_dt: dayjs(this.pass_dt).format("YYYY-MM-DD"),
-          }
-
-          this.$emit(type, editCurrentEmp)
-          this.isChange = false
-        }
-      } catch (error) {
-        console.error("Ошибка валидации:", error)
-      }
-    },
-  },
-
-  watch: {
-    currentEmp: {
-      immediate: false,
-      handler(emp) {
-        if (emp) {
-          this.isShow = true
-
-          this.fio = emp.fio
-          this.pass_ser = emp.pass_ser
-          this.pass_no = emp.pass_no
-          this.pass_dt = emp.pass_dt
-        } else {
-          this.isShow = false
-        }
-      },
-    },
-  },
+function change() {
+	isChange.value = true
 }
+
+function formatFio(fio) {
+	return fio
+		.split(" ")
+		.map((word) => capitalize(word))
+		.join(" ")
+}
+
+function deleteEmp() {
+	emit("emp-deleted")
+	isChange.value = false
+}
+
+async function submit(type) {
+	try {
+		const formIsValid = await formRef.value.validate()
+
+		if (formIsValid.valid) {
+			const editCurrentEmp = {
+				fio: formatFio(fio.value),
+				pass_ser: pass_ser.value,
+				pass_no: pass_no.value,
+				pass_dt: dayjs(pass_dt.value).format("YYYY-MM-DD"),
+			}
+
+			emit(type, editCurrentEmp)
+			isChange.value = false
+		}
+	}
+	catch (error) {
+		console.error("Ошибка валидации:", error)
+	}
+}
+
+watch(
+	() => props.currentEmp,
+	(emp) => {
+		if (emp) {
+			isShow.value = true
+
+			fio.value = emp.fio
+			pass_ser.value = emp.pass_ser
+			pass_no.value = emp.pass_no
+			pass_dt.value = emp.pass_dt
+		}
+		else {
+			isShow.value = false
+		}
+	},
+	{ immediate: false },
+)
 </script>
+
+<template>
+	<v-sheet
+		v-if="isShow"
+		class="mx-auto"
+		maxWidth="300"
+	>
+		<v-form
+			ref="formRef"
+			v-model="isValid"
+			validateOn="submit lazy"
+			@submit.prevent="submit(isNew ? 'emp-added' : 'emp-changed')"
+		>
+			<v-text-field
+				v-model.trim="fio"
+				label="ФИО"
+				:rules="fioRules"
+				@change="change"
+			/>
+			<v-text-field
+				v-model.trim="pass_ser"
+				label="Номер паспорта"
+				:rules="pasSerRules"
+				@change="change"
+			/>
+			<v-text-field
+				v-model.trim="pass_no"
+				label="Серия паспорта"
+				:rules="pasNoRules"
+				@change="change"
+			/>
+			<v-text-field
+				v-model.trim="pass_dt"
+				label="Дата выдачи: YYYY-MM-DD"
+				:rules="pasDtRules"
+				@change="change"
+			/>
+
+			<div v-if="!isNew">
+				<v-btn @click="deleteEmp">
+					Удалить
+				</v-btn>
+				<v-btn v-if="isChange" type="submit">
+					Изменить
+				</v-btn>
+			</div>
+			<v-btn v-else type="submit">
+				Добавить
+			</v-btn>
+		</v-form>
+	</v-sheet>
+</template>
