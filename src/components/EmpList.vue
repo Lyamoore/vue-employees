@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from "vue"
+
 const { employees } = defineProps({
 	employees: {
 		type: Array,
@@ -12,15 +14,18 @@ function handle(pass_no, pass_ser) {
 	emit("emp-selected", pass_no, pass_ser)
 }
 
-function formatFio(fio) {
+const formatFio = computed(() => (fio) => {
 	const [lastName, firstName, middleName] = fio.split(" ")
 
-	return `${lastName} ${firstName?.charAt(0)}. ${middleName?.charAt(0)}.`
-}
+	const formattedFirstName = firstName ? `${firstName.charAt(0)}.` : ""
+	const formattedMiddleName = middleName ? `${middleName.charAt(0)}.` : ""
+
+	return `${lastName} ${formattedFirstName} ${formattedMiddleName}`.trim()
+})
 </script>
 
 <template>
-	<v-card class="mx-auto" maxWidth="300">
+	<v-card>
 		<v-list v-if="employees.length > 0">
 			<v-list-item
 				v-for="emp in employees"
@@ -30,8 +35,9 @@ function formatFio(fio) {
 				<v-list-item-title>{{ formatFio(emp.fio) }}</v-list-item-title>
 			</v-list-item>
 		</v-list>
-		<p v-else>
-			Здесь пока нет сотрудников
-		</p>
+
+		<v-alert v-else type="info">
+			Здесь пока нет сотрудников. Нажмите "Добавить нового сотрудника", чтобы начать.
+		</v-alert>
 	</v-card>
 </template>
