@@ -8,10 +8,10 @@ const { employees } = defineProps({
 	},
 })
 
-const emit = defineEmits(["emp-selected"])
+const emit = defineEmits(["empSelected"])
 
 function handle(pass_no, pass_ser) {
-	emit("emp-selected", pass_no, pass_ser)
+	emit("empSelected", pass_no, pass_ser)
 }
 
 const formatFio = computed(() => (fio) => {
@@ -36,7 +36,7 @@ const formatFio = computed(() => (fio) => {
 			</v-list-item>
 		</v-list>
 
-		<v-alert v-else type="info">
+		<v-alert v-else type="warning">
 			Здесь пока нет сотрудников. Нажмите "Добавить нового сотрудника", чтобы начать.
 		</v-alert>
 	</v-card>

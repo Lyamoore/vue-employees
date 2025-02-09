@@ -15,12 +15,13 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(["emp-added", "emp-changed", "emp-deleted", "close-form"])
+const emit = defineEmits(["empAdded", "empChanged", "empDeleted", "closeForm"])
 
 const formRef = ref(null)
 const isChange = ref(false)
 const isValid = ref(false)
 const isShow = ref(false)
+const dialog = ref(false)
 
 const fio = ref("")
 const pass_ser = ref("")
@@ -30,7 +31,8 @@ const pass_dt = ref(null)
 const fioRules = [
 	(value) => !!value || "Требуется ФИО.",
 	(value) => {
-		const fioPattern = /^[А-ЯЁа-яё]+(?:-[А-ЯЁа-яё]+)?\s[А-ЯЁа-яё]+(?:\s[А-ЯЁа-яё]*)?$/
+		const fioPattern = /^[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:-[\u0410-\u042F\u0401\u0430-\u044F\u0451]+)?\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]*)?$/
+		// const fioPattern = /^[А-ЯЁа-яё]+(?:-[А-ЯЁа-яё]+)?\s[А-ЯЁа-яё]+(?:\s[А-ЯЁа-яё]*)?$/
 		return fioPattern.test(value) || "ФИО должно быть на кириллице и соответствовать стандартному формату."
 	},
 ]
@@ -72,12 +74,13 @@ function formatFio(fio) {
 }
 
 function deleteEmp() {
-	emit("emp-deleted")
+	emit("empDeleted")
 	isChange.value = false
+	dialog.value = false
 }
 
 function closeForm() {
-	emit("close-form")
+	emit("closeForm")
 }
 
 async function submit(type) {
@@ -147,7 +150,7 @@ watch(
 					ref="formRef"
 					v-model="isValid"
 					validateOn="submit lazy"
-					@submit.prevent="submit(isNew ? 'emp-added' : 'emp-changed')"
+					@submit.prevent="submit(isNew ? 'empAdded' : 'empChanged')"
 				>
 					<v-text-field
 						v-model.trim="fio"
@@ -202,10 +205,10 @@ watch(
 						<template v-else>
 							<v-col cols="6">
 								<v-btn
+									id="delete-btn-activator"
 									color="error"
 									outlined
 									block
-									@click="deleteEmp"
 								>
 									<v-icon left>
 										mdi-delete
@@ -213,6 +216,34 @@ watch(
 									Удалить
 								</v-btn>
 							</v-col>
+
+							<v-dialog
+								v-model="dialog"
+								maxWidth="400"
+
+								activator="#delete-btn-activator"
+							>
+								<template #default="{ isActive }"> <!-- eslint-disable-line -->
+									<v-card
+										prependIcon="mdi-alert-circle"
+										:text="`Вы действительно хотите удалить сотрудника ${currentEmp.fio}?`"
+										title="Подтверждение удаления"
+									>
+										<template #actions>
+											<v-spacer />
+
+											<v-btn @click="dialog = false">
+												Нет
+											</v-btn>
+
+											<v-btn @click="deleteEmp">
+												Да
+											</v-btn>
+										</template>
+									</v-card>
+								</template>
+							</v-dialog>
+
 							<v-col cols="6" class="text-right">
 								<v-btn
 									:disabled="!isChange"
