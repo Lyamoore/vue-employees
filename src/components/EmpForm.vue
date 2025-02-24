@@ -15,7 +15,7 @@ const props = defineProps({
 	},
 })
 
-const emit = defineEmits(["empAdded", "empChanged", "empDeleted", "closeForm"])
+const emit = defineEmits(["empAdded", "empChanged", "empDeleted", "duplicateForm", "closeForm"])
 
 const formRef = ref(null)
 const isChange = ref(false)
@@ -79,6 +79,10 @@ function deleteEmp() {
 	dialog.value = false
 }
 
+function duplicateForm() {
+	emit("duplicateForm")
+}
+
 function closeForm() {
 	emit("closeForm")
 }
@@ -132,6 +136,16 @@ watch(
 			style="position: relative;"
 		>
 			<v-btn
+				v-if="!isNew"
+				icon
+				size="small"
+				style="position: absolute; top: 8px; right: 40px; z-index: 1;"
+				variant="text"
+				@click="duplicateForm"
+			>
+				<v-icon>mdi-content-copy</v-icon>
+			</v-btn>
+			<v-btn
 				icon
 				size="small"
 				style="position: absolute; top: 8px; right: 8px; z-index: 1;"
@@ -141,7 +155,7 @@ watch(
 				<v-icon>mdi-close</v-icon>
 			</v-btn>
 
-			<v-card-title class="text-center" style="padding-top: 40px;">
+			<v-card-title class="text-center" style="padding-top: 50px; padding-bottom: 20px;">
 				{{ isNew ? 'Новый сотрудник' : 'Редактирование сотрудника' }}
 			</v-card-title>
 
@@ -224,11 +238,22 @@ watch(
 								activator="#delete-btn-activator"
 							>
 								<template #default="{ isActive }"> <!-- eslint-disable-line -->
-									<v-card
-										prependIcon="mdi-alert-circle"
-										:text="`Вы действительно хотите удалить сотрудника ${currentEmp.fio}?`"
-										title="Подтверждение удаления"
-									>
+									<v-card>
+										<template #prepend>
+											<v-icon
+												color="error"
+												icon="mdi-alert-circle"
+											/>
+										</template>
+
+										<template #title>
+											<span class="text-error">Подтверждение удаления</span>
+										</template>
+
+										<v-card-text>
+											{{ `Вы действительно хотите удалить сотрудника ${currentEmp.fio}?` }}
+										</v-card-text>
+
 										<template #actions>
 											<v-spacer />
 
@@ -236,7 +261,7 @@ watch(
 												Нет
 											</v-btn>
 
-											<v-btn @click="deleteEmp">
+											<v-btn color="error" @click="deleteEmp">
 												Да
 											</v-btn>
 										</template>

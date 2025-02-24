@@ -15,12 +15,14 @@ function setCurrentEmp(pass_no, pass_ser) {
 	isNew.value = false
 }
 
-function setNewEmp() {
-	currentEmp.value = {
-		fio: "",
-		pass_ser: "",
-		pass_no: "",
-		pass_dt: "",
+function setNewEmp(duplicate = false) {
+	if (!duplicate) {
+		currentEmp.value = {
+			fio: "",
+			pass_ser: "",
+			pass_no: "",
+			pass_dt: "",
+		}
 	}
 	isNew.value = true
 }
@@ -33,6 +35,7 @@ function findEmployeeIndex(pass_no, pass_ser) {
 
 function changeEmp(emp) {
 	const idx = findEmployeeIndex(currentEmp.value.pass_no, currentEmp.value.pass_ser)
+
 	if (idx !== -1) {
 		employees.value[idx] = { ...employees.value[idx], ...emp }
 	}
@@ -47,10 +50,15 @@ function addEmp(emp) {
 
 function deleteEmp() {
 	const idx = findEmployeeIndex(currentEmp.value.pass_no, currentEmp.value.pass_ser)
+
 	if (idx !== -1) {
 		employees.value.splice(idx, 1)
 		currentEmp.value = null
 	}
+}
+
+function duplicateForm() {
+	setNewEmp(true)
 }
 
 function closeForm() {
@@ -73,7 +81,7 @@ function closeForm() {
 						<v-btn
 							color="primary"
 							block
-							@click="setNewEmp"
+							@click="setNewEmp()"
 						>
 							Добавить нового сотрудника
 						</v-btn>
@@ -105,6 +113,7 @@ function closeForm() {
 							@empChanged="changeEmp"
 							@empAdded="addEmp"
 							@empDeleted="deleteEmp"
+							@duplicateForm="duplicateForm"
 							@closeForm="closeForm"
 						/>
 					</v-col>
