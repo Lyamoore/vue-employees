@@ -24,6 +24,11 @@ function setNewEmp(duplicate = false) {
 			pass_dt: "",
 		}
 	}
+	else {
+		currentEmp.value = {
+			...currentEmp.value,
+		}
+	}
 	isNew.value = true
 }
 
@@ -33,7 +38,21 @@ function findEmployeeIndex(pass_no, pass_ser) {
 	)
 }
 
+function isDuplicateEmployee(employees, empToCheck) {
+	return employees.some(
+		(employee) =>
+			employee.pass_no === empToCheck.pass_no &&
+			employee.pass_ser === empToCheck.pass_ser &&
+			employee.fio !== empToCheck.fio,
+	)
+}
+
 function changeEmp(emp) {
+	if (isDuplicateEmployee(employees.value, emp)) {
+		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+		return
+	}
+
 	const idx = findEmployeeIndex(currentEmp.value.pass_no, currentEmp.value.pass_ser)
 
 	if (idx !== -1) {
@@ -42,6 +61,11 @@ function changeEmp(emp) {
 }
 
 function addEmp(emp) {
+	if (isDuplicateEmployee(employees.value, emp)) {
+		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+		return
+	}
+
 	employees.value.push(emp)
 
 	isNew.value = false

@@ -21,7 +21,9 @@ const formRef = ref(null)
 const isChange = ref(false)
 const isValid = ref(false)
 const isShow = ref(false)
-const dialog = ref(false)
+const dialogDelete = ref(false)
+const dialogClose = ref(false)
+const actionDialog = ref("")
 
 const fio = ref("")
 const pass_ser = ref("")
@@ -76,15 +78,34 @@ function formatFio(fio) {
 function deleteEmp() {
 	emit("empDeleted")
 	isChange.value = false
-	dialog.value = false
+	dialogDelete.value = false
+}
+
+function confirmAction() {
+	emit(actionDialog.value)
+	actionDialog.value = ""
+	dialogClose.value = false
+	isChange.value = false
 }
 
 function duplicateForm() {
-	emit("duplicateForm")
+	if (isChange.value) {
+		dialogClose.value = true
+		actionDialog.value = "duplicateForm"
+	}
+	else {
+		emit("duplicateForm")
+	}
 }
 
 function closeForm() {
-	emit("closeForm")
+	if (isChange.value) {
+		dialogClose.value = true
+		actionDialog.value = "closeForm"
+	}
+	else {
+		emit("closeForm")
+	}
 }
 
 async function submit(type) {
@@ -146,6 +167,7 @@ watch(
 				<v-icon>mdi-content-copy</v-icon>
 			</v-btn>
 			<v-btn
+				id="save-btn-activator"
 				icon
 				size="small"
 				style="position: absolute; top: 8px; right: 8px; z-index: 1;"
@@ -154,6 +176,41 @@ watch(
 			>
 				<v-icon>mdi-close</v-icon>
 			</v-btn>
+
+			<v-dialog
+				v-model="dialogClose"
+				maxWidth="400"
+			>
+				<v-card>
+					<template #prepend>
+						<v-icon
+							color="warning"
+							icon="mdi-alert"
+						/>
+					</template>
+
+					<template #title>
+						<span class="text-warning">Несохраненные изменения</span>
+					</template>
+
+					<v-card-text>
+						У вас есть несохраненные изменения. Вы уверены, что хотите продолжить?
+					</v-card-text>
+
+					<v-card-actions>
+						<v-spacer />
+						<v-btn @click="dialogClose = false">
+							Отмена
+						</v-btn>
+						<v-btn
+							color="primary"
+							@click="confirmAction"
+						>
+							Продолжить
+						</v-btn>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
 
 			<v-card-title class="text-center" style="padding-top: 50px; padding-bottom: 20px;">
 				{{ isNew ? 'Новый сотрудник' : 'Редактирование сотрудника' }}
@@ -232,7 +289,7 @@ watch(
 							</v-col>
 
 							<v-dialog
-								v-model="dialog"
+								v-model="dialogDelete"
 								maxWidth="400"
 
 								activator="#delete-btn-activator"
@@ -257,7 +314,7 @@ watch(
 										<template #actions>
 											<v-spacer />
 
-											<v-btn @click="dialog = false">
+											<v-btn @click="dialogDelete = false">
 												Нет
 											</v-btn>
 
