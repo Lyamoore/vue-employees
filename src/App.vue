@@ -1,128 +1,148 @@
-<template>
-  <v-app>
-    <v-main>
-      <v-container>
-        <v-row>
-          <v-col cols="3">
-            <app-button @action="setNewEmp"
-              >Добавить нового сотрудника</app-button
-            >
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="3"
-            ><emp-list @emp-selected="setCurrentEmp"></emp-list
-          ></v-col>
-          <v-col cols="3"
-            ><emp-form
-              :current-emp="currentEmp"
-              :is-new="isNew"
-              @emp-changed="changeEmp"
-              @emp-added="addEmp"
-              @emp-deleted="deleteEmp"
-            ></emp-form>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-main>
-  </v-app>
-</template>
-
-<script>
-import AppButton from "./components/AppButton.vue"
+<script setup>
+import { ref } from "vue"
+import { useStorage } from "@vueuse/core"
 import EmpList from "./components/EmpList.vue"
 import EmpForm from "./components/EmpForm.vue"
-import { useStorage } from "@vueuse/core"
 
-export default {
-  name: "App",
+const employees = useStorage("empStore", [])
+const currentEmp = ref(null)
+const isNew = ref(false)
 
-  components: {
-    AppButton,
-    EmpList,
-    EmpForm,
-  },
+function setCurrentEmp(pass_no, pass_ser) {
+	currentEmp.value = employees.value.find(
+		(emp) => emp.pass_no === pass_no && emp.pass_ser === pass_ser,
+	)
+	isNew.value = false
+}
 
-  provide() {
-    return {
-      employees: this.employees,
-    }
-  },
+function setNewEmp(duplicate = false) {
+	if (!duplicate) {
+		currentEmp.value = {
+			fio: "",
+			pass_ser: "",
+			pass_no: "",
+			pass_dt: "",
+		}
+	}
+	else {
+		currentEmp.value = {
+			...currentEmp.value,
+		}
+	}
+	isNew.value = true
+}
 
-  data() {
-    return {
-      currentEmp: null,
-      isNew: false,
-    }
-  },
+function findEmployeeIndex(pass_no, pass_ser) {
+	return employees.value.findIndex(
+		(emp) => emp.pass_no === pass_no && emp.pass_ser === pass_ser,
+	)
+}
 
-  setup() {
-    const employees = useStorage("empStore", [
-      {
-        fio: "Лапшова Мария Александровна",
-        pass_ser: 1234,
-        pass_no: 123456,
-        pass_dt: "2020-12-25",
-      },
-      {
-        fio: "Водянова Кера Владимировна",
-        pass_ser: 2234,
-        pass_no: 567834,
-        pass_dt: "2003-10-22",
-      },
-      {
-        fio: "Грекова Татьяна Михайловна",
-        pass_ser: 3234,
-        pass_no: 928331,
-        pass_dt: "2012-11-12",
-      },
-    ])
+function isDuplicateEmployee(employees, empToCheck) {
+	return employees.some(
+		(employee) =>
+			employee.pass_no === empToCheck.pass_no &&
+			employee.pass_ser === empToCheck.pass_ser &&
+			employee.fio !== empToCheck.fio,
+	)
+}
 
-    return {
-      employees,
-    }
-  },
+function changeEmp(emp) {
+	if (isDuplicateEmployee(employees.value, emp)) {
+		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+		return
+	}
 
-  methods: {
-    setCurrentEmp(pass_no, pass_ser) {
-      this.currentEmp = this.employees.find(
-        (emp) => emp.pass_no === pass_no && emp.pass_ser === pass_ser
-      )
-      this.isNew = false
-    },
-    setNewEmp() {
-      this.currentEmp = {
-        fio: "",
-        pass_ser: "",
-        pass_no: "",
-        pass_dt: "",
-      }
-      this.isNew = true
-    },
+	const idx = findEmployeeIndex(currentEmp.value.pass_no, currentEmp.value.pass_ser)
 
-    changeEmp(emp) {
-      const idx = this.employees.findIndex(
-        (emp) =>
-          emp.pass_no === this.currentEmp.pass_no &&
-          emp.pass_ser === this.currentEmp.pass_ser
-      )
-      this.employees[idx] = { ...this.employees[idx], ...emp }
-    },
-    addEmp(emp) {
-      this.employees.push(emp)
+	if (idx !== -1) {
+		employees.value[idx] = { ...employees.value[idx], ...emp }
+	}
+}
 
-      this.isNew = false
-    },
-    deleteEmp() {
-      const idx = this.employees.findIndex(
-        (emp) =>
-          emp.pass_no === this.currentEmp.pass_no &&
-          emp.pass_ser === this.currentEmp.pass_ser
-      )
-      this.employees.splice(idx, 1)
+function addEmp(emp) {
+	if (isDuplicateEmployee(employees.value, emp)) {
+		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+		return
+	}
 
-      this.currentEmp = null
-    },
-  },
+	employees.value.push(emp)
+
+	isNew.value = false
+	currentEmp.value = null
+}
+
+function deleteEmp() {
+	const idx = findEmployeeIndex(currentEmp.value.pass_no, currentEmp.value.pass_ser)
+
+	if (idx !== -1) {
+		employees.value.splice(idx, 1)
+		currentEmp.value = null
+	}
+}
+
+function duplicateForm() {
+	setNewEmp(true)
+}
+
+function closeForm() {
+	currentEmp.value = null
+	isNew.value = false
 }
 </script>
+
+<template>
+	<v-app>
+		<v-main>
+			<v-container fluid>
+				<v-row>
+					<v-col
+						cols="12"
+						sm="6"
+						md="4"
+						lg="3"
+					>
+						<v-btn
+							color="primary"
+							block
+							@click="setNewEmp()"
+						>
+							Добавить нового сотрудника
+						</v-btn>
+					</v-col>
+				</v-row>
+
+				<v-row>
+					<v-col
+						cols="12"
+						sm="6"
+						md="4"
+						lg="3"
+					>
+						<EmpList
+							:employees="employees"
+							@empSelected="setCurrentEmp"
+						/>
+					</v-col>
+
+					<v-col
+						cols="12"
+						sm="6"
+						md="5"
+						lg="4"
+					>
+						<EmpForm
+							:currentEmp="currentEmp"
+							:isNew="isNew"
+							@empChanged="changeEmp"
+							@empAdded="addEmp"
+							@empDeleted="deleteEmp"
+							@duplicateForm="duplicateForm"
+							@closeForm="closeForm"
+						/>
+					</v-col>
+				</v-row>
+			</v-container>
+		</v-main>
+	</v-app>
+</template>

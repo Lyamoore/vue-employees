@@ -1,172 +1,349 @@
-<template>
-  <v-sheet class="mx-auto" max-width="300" v-if="isShow">
-    <v-form
-      validate-on="submit lazy"
-      ref="form"
-      @submit.prevent="submit(isNew ? 'emp-added' : 'emp-changed')"
-      v-model="isValid"
-    >
-      <v-text-field
-        v-model="fio"
-        label="ФИО"
-        :rules="fioRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_ser"
-        label="Номер паспорта"
-        :rules="pasSerRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_no"
-        label="Серия паспорта"
-        :rules="pasNoRules"
-        @change="change"
-      ></v-text-field>
-      <v-text-field
-        v-model="pass_dt"
-        label="Дата выдачи: YYYY-MM-DD"
-        :rules="pasDtRules"
-        @change="change"
-      ></v-text-field>
-
-      <div v-if="!isNew">
-        <app-button @action="deleteEmp">Удалить</app-button>
-        <app-button v-if="isChange" type="submit">Изменить</app-button>
-      </div>
-      <app-button v-else type="submit">Добавить</app-button>
-    </v-form>
-  </v-sheet>
-</template>
-
-<script>
-import dayjs from "dayjs"
-import AppButton from "./AppButton.vue"
+<script setup>
+import { VDateInput } from "vuetify/labs/VDateInput"
+import { ref, watch } from "vue"
 import { capitalize } from "lodash"
+import dayjs from "dayjs"
 
-export default {
-  components: {
-    AppButton,
-  },
+const props = defineProps({
+	currentEmp: {
+		type: Object,
+		default: null,
+	},
+	isNew: {
+		type: Boolean,
+		required: true,
+	},
+})
 
-  props: {
-    currentEmp: {
-      type: Object,
-      required: true,
-    },
-    isNew: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const emit = defineEmits(["empAdded", "empChanged", "empDeleted", "duplicateForm", "closeForm"])
 
-  data: () => ({
-    isChange: false,
-    isValid: false,
-    isShow: false,
+const formRef = ref(null)
+const isChange = ref(false)
+const isValid = ref(false)
+const isShow = ref(false)
+const dialogDelete = ref(false)
+const dialogClose = ref(false)
+const actionDialog = ref("")
 
-    fio: "",
-    pass_ser: "",
-    pass_no: "",
-    pass_dt: "",
+const fio = ref("")
+const pass_ser = ref("")
+const pass_no = ref("")
+const pass_dt = ref(null)
 
-    fioRules: [
-      (value) => {
-        if (value) return true
+const fioRules = [
+	(value) => !!value || "Требуется ФИО.",
+	(value) => {
+		const fioPattern = /^[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:-[\u0410-\u042F\u0401\u0430-\u044F\u0451]+)?\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]*)?$/
+		// const fioPattern = /^[А-ЯЁа-яё]+(?:-[А-ЯЁа-яё]+)?\s[А-ЯЁа-яё]+(?:\s[А-ЯЁа-яё]*)?$/
+		return fioPattern.test(value) || "ФИО должно быть на кириллице и соответствовать стандартному формату."
+	},
+]
+const pasSerRules = [
+	(value) => !!value || "Требуется серия паспорта.",
+	(value) =>
+		/^\d{4}$/.test(value) || "Серия паспорта должна состоять из 4 цифр.",
+]
+const pasNoRules = [
+	(value) => !!value || "Требуется номер паспорта.",
+	(value) =>
+		/^\d{6}$/.test(value) || "Номер паспорта должен состоять из 6 цифр.",
+]
+const pasDtRules = [
+	(value) => !!value || "Требуется дата выдачи паспорта.",
+]
 
-        return "Требуется ФИО."
-      },
-    ],
-    pasSerRules: [
-      (value) => {
-        if (value) return true
+function handlePassInput(event, type) {
+	const value = event.target.value.replace(/\D/g, "")
+	if (type === "ser") {
+		pass_ser.value = value.slice(0, 4)
+	}
+	else if (type === "no") {
+		pass_no.value = value.slice(0, 6)
+	}
 
-        return "Требуется серия паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{4}$/.test(value)) return true
-
-        return "Серия паспорта должна состоять из 4 цифр."
-      },
-    ],
-    pasNoRules: [
-      (value) => {
-        if (value) return true
-
-        return "Требуется номер паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{6}$/.test(value)) return true
-
-        return "Номер паспорта должен состоять из 6 цифр."
-      },
-    ],
-    pasDtRules: [
-      (value) => {
-        if (value) return true
-
-        return "Требуется дата выдачи паспорта."
-      },
-      (value) => {
-        if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) return true
-
-        return "Неправильная дата выдачи паспорта."
-      },
-    ],
-  }),
-
-  methods: {
-    change() {
-      this.isChange = true
-    },
-    formatFio(fio) {
-      return fio
-        .split(" ")
-        .map((word) => capitalize(word))
-        .join(" ")
-    },
-    deleteEmp() {
-      this.$emit("emp-deleted")
-      this.isChange = false
-    },
-    async submit(type) {
-      try {
-        const isValid = await this.$refs.form.validate()
-
-        if (isValid) {
-          const editCurrentEmp = {
-            fio: this.formatFio(this.fio),
-            pass_ser: this.pass_ser,
-            pass_no: this.pass_no,
-            pass_dt: dayjs(this.pass_dt).format("YYYY-MM-DD"),
-          }
-
-          this.$emit(type, editCurrentEmp)
-          this.isChange = false
-        }
-      } catch (error) {
-        console.error("Ошибка валидации:", error)
-      }
-    },
-  },
-
-  watch: {
-    currentEmp: {
-      immediate: false,
-      handler(emp) {
-        if (emp) {
-          this.isShow = true
-
-          this.fio = emp.fio
-          this.pass_ser = emp.pass_ser
-          this.pass_no = emp.pass_no
-          this.pass_dt = emp.pass_dt
-        } else {
-          this.isShow = false
-        }
-      },
-    },
-  },
+	change()
 }
+
+function change() {
+	isChange.value = true
+}
+
+function formatFio(fio) {
+	return fio
+		.split(" ")
+		.map((word) => capitalize(word))
+		.join(" ")
+}
+
+function deleteEmp() {
+	emit("empDeleted")
+	isChange.value = false
+	dialogDelete.value = false
+}
+
+function confirmAction() {
+	emit(actionDialog.value)
+	actionDialog.value = ""
+	dialogClose.value = false
+	isChange.value = false
+}
+
+function duplicateForm() {
+	if (isChange.value) {
+		dialogClose.value = true
+		actionDialog.value = "duplicateForm"
+	}
+	else {
+		emit("duplicateForm")
+	}
+}
+
+function closeForm() {
+	if (isChange.value) {
+		dialogClose.value = true
+		actionDialog.value = "closeForm"
+	}
+	else {
+		emit("closeForm")
+	}
+}
+
+async function submit(type) {
+	try {
+		const formIsValid = await formRef.value.validate()
+
+		if (formIsValid.valid) {
+			const editCurrentEmp = {
+				fio: formatFio(fio.value),
+				pass_ser: pass_ser.value,
+				pass_no: pass_no.value,
+				pass_dt: dayjs(pass_dt.value).format("YYYY-MM-DD"),
+			}
+
+			emit(type, editCurrentEmp)
+			isChange.value = false
+		}
+	}
+	catch (error) {
+		console.error("Ошибка валидации:", error)
+	}
+}
+
+watch(
+	() => props.currentEmp,
+	(emp) => {
+		if (emp) {
+			isShow.value = true
+
+			fio.value = emp.fio
+			pass_ser.value = emp.pass_ser
+			pass_no.value = emp.pass_no
+			pass_dt.value = emp.pass_dt ? new Date(emp.pass_dt) : null
+		}
+		else {
+			isShow.value = false
+		}
+	},
+	{ immediate: false },
+)
 </script>
+
+<template>
+	<v-fade-transition>
+		<v-card
+			v-if="isShow"
+			class="mx-auto"
+			maxWidth="400"
+			style="position: relative;"
+		>
+			<v-btn
+				v-if="!isNew"
+				icon
+				size="small"
+				style="position: absolute; top: 8px; right: 40px; z-index: 1;"
+				variant="text"
+				@click="duplicateForm"
+			>
+				<v-icon>mdi-content-copy</v-icon>
+			</v-btn>
+			<v-btn
+				id="save-btn-activator"
+				icon
+				size="small"
+				style="position: absolute; top: 8px; right: 8px; z-index: 1;"
+				variant="text"
+				@click="closeForm"
+			>
+				<v-icon>mdi-close</v-icon>
+			</v-btn>
+
+			<v-dialog
+				v-model="dialogClose"
+				maxWidth="400"
+			>
+				<v-card>
+					<template #prepend>
+						<v-icon
+							color="warning"
+							icon="mdi-alert"
+						/>
+					</template>
+
+					<template #title>
+						<span class="text-warning">Несохраненные изменения</span>
+					</template>
+
+					<v-card-text>
+						У вас есть несохраненные изменения. Вы уверены, что хотите продолжить?
+					</v-card-text>
+
+					<v-card-actions>
+						<v-spacer />
+						<v-btn @click="dialogClose = false">
+							Отмена
+						</v-btn>
+						<v-btn
+							color="primary"
+							@click="confirmAction"
+						>
+							Продолжить
+						</v-btn>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
+			<v-card-title class="text-center" style="padding-top: 50px; padding-bottom: 20px;">
+				{{ isNew ? 'Новый сотрудник' : 'Редактирование сотрудника' }}
+			</v-card-title>
+
+			<v-card-text>
+				<v-form
+					ref="formRef"
+					v-model="isValid"
+					validateOn="submit lazy"
+					@submit.prevent="submit(isNew ? 'empAdded' : 'empChanged')"
+				>
+					<v-text-field
+						v-model.trim="fio"
+						label="ФИО"
+						:rules="fioRules"
+						outlined
+						dense
+						@input="change"
+					/>
+					<v-text-field
+						v-model.trim="pass_ser"
+						label="Номер паспорта"
+						:rules="pasSerRules"
+						maxlength="4"
+						outlined
+						dense
+						@input="(event) => handlePassInput(event, 'ser')"
+					/>
+					<v-text-field
+						v-model.trim="pass_no"
+						label="Серия паспорта"
+						:rules="pasNoRules"
+						maxlength="6"
+						outlined
+						dense
+						@input="(event) => handlePassInput(event, 'no')"
+					/>
+					<VDateInput
+						v-model="pass_dt"
+						label="Дата выдачи"
+						:rules="pasDtRules"
+						prependIcon=""
+						prependInnerIcon="$calendar"
+						@update:modelValue="change"
+					/>
+
+					<v-row class="mt-4">
+						<v-col v-if="isNew" cols="12">
+							<v-btn
+								:disabled="!isChange"
+								type="submit"
+								color="primary"
+								block
+							>
+								<v-icon left>
+									mdi-plus
+								</v-icon>
+								Добавить
+							</v-btn>
+						</v-col>
+
+						<template v-else>
+							<v-col cols="6">
+								<v-btn
+									id="delete-btn-activator"
+									color="error"
+									outlined
+									block
+								>
+									<v-icon left>
+										mdi-delete
+									</v-icon>
+									Удалить
+								</v-btn>
+							</v-col>
+
+							<v-dialog
+								v-model="dialogDelete"
+								maxWidth="400"
+
+								activator="#delete-btn-activator"
+							>
+								<template #default="{ isActive }"> <!-- eslint-disable-line -->
+									<v-card>
+										<template #prepend>
+											<v-icon
+												color="error"
+												icon="mdi-alert-circle"
+											/>
+										</template>
+
+										<template #title>
+											<span class="text-error">Подтверждение удаления</span>
+										</template>
+
+										<v-card-text>
+											{{ `Вы действительно хотите удалить сотрудника ${currentEmp.fio}?` }}
+										</v-card-text>
+
+										<template #actions>
+											<v-spacer />
+
+											<v-btn @click="dialogDelete = false">
+												Нет
+											</v-btn>
+
+											<v-btn color="error" @click="deleteEmp">
+												Да
+											</v-btn>
+										</template>
+									</v-card>
+								</template>
+							</v-dialog>
+
+							<v-col cols="6" class="text-right">
+								<v-btn
+									:disabled="!isChange"
+									type="submit"
+									color="primary"
+									outlined
+									block
+								>
+									<v-icon left>
+										mdi-pencil
+									</v-icon>
+									Изменить
+								</v-btn>
+							</v-col>
+						</template>
+					</v-row>
+				</v-form>
+			</v-card-text>
+		</v-card>
+	</v-fade-transition>
+</template>

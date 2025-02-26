@@ -1,43 +1,43 @@
-<template>
-  <v-card class="mx-auto" max-width="300">
-    <v-list v-if="employees.length > 0">
-      <v-list-item
-        v-for="emp in employees"
-        :key="`${emp.pass_ser}:${emp.pass_no}`"
-        @click="handle(emp.pass_no, emp.pass_ser)"
-      >
-        <v-list-item-title>{{ formatFio(emp.fio) }}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-    <p v-else>Здесь пока нет сотрудников</p>
-  </v-card>
-</template>
+<script setup>
+import { computed } from "vue"
 
-<script>
-export default {
-  inject: ["employees"],
+const { employees } = defineProps({
+	employees: {
+		type: Array,
+		required: true,
+	},
+})
 
-  emits: {
-    "emp-selected"(pass_no, pass_ser) {
-      if (pass_no && pass_ser) {
-        return true
-      }
-      console.warn("Не передан pass_no или  pass_ser")
-      return false
-    },
-  },
+const emit = defineEmits(["empSelected"])
 
-  methods: {
-    handle(pass_no, pass_ser) {
-      this.$emit("emp-selected", pass_no, pass_ser)
-    },
-    formatFio(fio) {
-      const [lastName, firstName, middleName] = fio.split(" ")
-
-      return `${lastName} ${firstName?.charAt(0)}. ${middleName?.charAt(
-        0
-      )}.`.trim()
-    },
-  },
+function handle(pass_no, pass_ser) {
+	emit("empSelected", pass_no, pass_ser)
 }
+
+const formatFio = computed(() => (fio) => {
+	const [lastName, firstName, middleName] = fio.split(" ")
+
+	const formattedFirstName = firstName ? `${firstName.charAt(0)}.` : ""
+	const formattedMiddleName = middleName ? `${middleName.charAt(0)}.` : ""
+
+	return `${lastName} ${formattedFirstName} ${formattedMiddleName}`.trim()
+})
 </script>
+
+<template>
+	<v-card>
+		<v-list v-if="employees.length > 0">
+			<v-list-item
+				v-for="emp in employees"
+				:key="`${emp.pass_ser}:${emp.pass_no}`"
+				@click="handle(emp.pass_no, emp.pass_ser)"
+			>
+				<v-list-item-title>{{ formatFio(emp.fio) }}</v-list-item-title>
+			</v-list-item>
+		</v-list>
+
+		<v-alert v-else type="warning">
+			Здесь пока нет сотрудников. Нажмите "Добавить нового сотрудника", чтобы начать.
+		</v-alert>
+	</v-card>
+</template>

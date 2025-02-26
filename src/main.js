@@ -1,10 +1,23 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import vuetify from './plugins/vuetify'
-import { loadFonts } from './plugins/webfontloader'
+/**
+ * main.js
+ *
+ * Bootstraps Vuetify and other plugins then mounts the App`
+ */
 
-loadFonts()
+// Plugins
+import { registerPlugins } from "@/plugins"
 
-createApp(App)
-  .use(vuetify)
-  .mount('#app')
+// Components
+import App from "./App.vue"
+
+// Composables
+// import router from "./router"
+import { createApp } from "vue"
+
+const app = createApp(App)
+
+registerPlugins(app)
+
+// app.use(router)
+
+app.mount("#app")
