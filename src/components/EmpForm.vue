@@ -1,8 +1,10 @@
 <script setup>
-import { VDateInput } from "vuetify/labs/VDateInput"
-import { ref, watch } from "vue"
 import { capitalize } from "lodash"
 import dayjs from "dayjs"
+import { ref, watch } from "vue"
+import { VDateInput } from "vuetify/labs/VDateInput"
+
+import { ruleFio, rulePassNo, rulePassSer, ruleRequired } from "@/utils/rules.js"
 
 const props = defineProps({
 	currentEmp: {
@@ -30,28 +32,12 @@ const pass_ser = ref("")
 const pass_no = ref("")
 const pass_dt = ref(null)
 
-const fioRules = [
-	(value) => !!value || "Требуется ФИО.",
-	(value) => {
-		const fioPattern = /^[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:-[\u0410-\u042F\u0401\u0430-\u044F\u0451]+)?\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]+(?:\s[\u0410-\u042F\u0401\u0430-\u044F\u0451]*)?$/
-		// const fioPattern = /^[А-ЯЁа-яё]+(?:-[А-ЯЁа-яё]+)?\s[А-ЯЁа-яё]+(?:\s[А-ЯЁа-яё]*)?$/
-		return fioPattern.test(value) || "ФИО должно быть на кириллице и соответствовать стандартному формату."
-	},
-]
-const pasSerRules = [
-	(value) => !!value || "Требуется серия паспорта.",
-	(value) =>
-		/^\d{4}$/.test(value) || "Серия паспорта должна состоять из 4 цифр.",
-]
-const pasNoRules = [
-	(value) => !!value || "Требуется номер паспорта.",
-	(value) =>
-		/^\d{6}$/.test(value) || "Номер паспорта должен состоять из 6 цифр.",
-]
-const pasDtRules = [
-	(value) => !!value || "Требуется дата выдачи паспорта.",
-]
+const rulesFio = [ruleRequired, ruleFio]
+const rulesPassSer = [ruleRequired, rulePassSer]
+const rulesPassNo = [ruleRequired, rulePassNo]
+const rulesPassDt = [ruleRequired]
 
+//
 function handlePassInput(event, type) {
 	const value = event.target.value.replace(/\D/g, "")
 	if (type === "ser") {
@@ -226,7 +212,7 @@ watch(
 					<v-text-field
 						v-model.trim="fio"
 						label="ФИО"
-						:rules="fioRules"
+						:rules="rulesFio"
 						outlined
 						dense
 						@input="change"
@@ -234,7 +220,7 @@ watch(
 					<v-text-field
 						v-model.trim="pass_ser"
 						label="Номер паспорта"
-						:rules="pasSerRules"
+						:rules="rulesPassSer"
 						maxlength="4"
 						outlined
 						dense
@@ -243,7 +229,7 @@ watch(
 					<v-text-field
 						v-model.trim="pass_no"
 						label="Серия паспорта"
-						:rules="pasNoRules"
+						:rules="rulesPassNo"
 						maxlength="6"
 						outlined
 						dense
@@ -252,7 +238,7 @@ watch(
 					<VDateInput
 						v-model="pass_dt"
 						label="Дата выдачи"
-						:rules="pasDtRules"
+						:rules="rulesPassDt"
 						prependIcon=""
 						prependInnerIcon="$calendar"
 						@update:modelValue="change"
