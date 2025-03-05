@@ -2,9 +2,8 @@
 import { capitalize } from "lodash"
 import dayjs from "dayjs"
 import { ref, watch } from "vue"
-import { VDateInput } from "vuetify/labs/VDateInput"
-
-import { ruleFio, rulePassNo, rulePassSer, ruleRequired } from "@/utils/rules.js"
+import FormEmp from "@/components/FormEmp.vue"
+import DialogTrashEmp from "@/components/DialogTrashEmp.vue"
 
 const props = defineProps({
 	currentEmp: {
@@ -16,44 +15,27 @@ const props = defineProps({
 		required: true,
 	},
 })
+const emit = defineEmits([
+	"empAdded",
+	"empChanged",
+	"empDeleted",
+	"duplicateForm",
+	"closeForm",
+])
 
-const emit = defineEmits(["empAdded", "empChanged", "empDeleted", "duplicateForm", "closeForm"])
-
-const formRef = ref(null)
 const isChange = ref(false)
-const isValid = ref(false)
 const isShow = ref(false)
 const dialogDelete = ref(false)
 const dialogClose = ref(false)
 const actionDialog = ref("")
 
+//
 const fio = ref("")
 const pass_ser = ref("")
 const pass_no = ref("")
 const pass_dt = ref(null)
 
-const rulesFio = [ruleRequired, ruleFio]
-const rulesPassSer = [ruleRequired, rulePassSer]
-const rulesPassNo = [ruleRequired, rulePassNo]
-const rulesPassDt = [ruleRequired]
-
 //
-function handlePassInput(event, type) {
-	const value = event.target.value.replace(/\D/g, "")
-	if (type === "ser") {
-		pass_ser.value = value.slice(0, 4)
-	}
-	else if (type === "no") {
-		pass_no.value = value.slice(0, 6)
-	}
-
-	change()
-}
-
-function change() {
-	isChange.value = true
-}
-
 function formatFio(fio) {
 	return fio
 		.split(" ")
@@ -94,19 +76,18 @@ function closeForm() {
 	}
 }
 
-async function submit(type) {
+async function submit(ev) {
 	try {
-		const formIsValid = await formRef.value.validate()
+		console.log(">>>", ev) //D
+		const { valid } = await ev
 
-		if (formIsValid.valid) {
-			const editCurrentEmp = {
+		if (valid) {
+			emit(props.isNew ? "empAdded" : "empChanged", {
 				fio: formatFio(fio.value),
 				pass_ser: pass_ser.value,
 				pass_no: pass_no.value,
 				pass_dt: dayjs(pass_dt.value).format("YYYY-MM-DD"),
-			}
-
-			emit(type, editCurrentEmp)
+			})
 			isChange.value = false
 		}
 	}
@@ -152,6 +133,7 @@ watch(
 			>
 				<v-icon>mdi-content-copy</v-icon>
 			</v-btn>
+
 			<v-btn
 				id="save-btn-activator"
 				icon
@@ -203,47 +185,14 @@ watch(
 			</v-card-title>
 
 			<v-card-text>
-				<v-form
-					ref="formRef"
-					v-model="isValid"
-					validateOn="submit lazy"
-					@submit.prevent="submit(isNew ? 'empAdded' : 'empChanged')"
+				<FormEmp
+					v-model:fio="fio"
+					v-model:pass_ser="pass_ser"
+					v-model:pass_no="pass_no"
+					v-model:pass_dt="pass_dt"
+					@change="isChange = true"
+					@submit.prevent="submit"
 				>
-					<v-text-field
-						v-model.trim="fio"
-						label="ФИО"
-						:rules="rulesFio"
-						outlined
-						dense
-						@input="change"
-					/>
-					<v-text-field
-						v-model.trim="pass_ser"
-						label="Номер паспорта"
-						:rules="rulesPassSer"
-						maxlength="4"
-						outlined
-						dense
-						@input="(event) => handlePassInput(event, 'ser')"
-					/>
-					<v-text-field
-						v-model.trim="pass_no"
-						label="Серия паспорта"
-						:rules="rulesPassNo"
-						maxlength="6"
-						outlined
-						dense
-						@input="(event) => handlePassInput(event, 'no')"
-					/>
-					<VDateInput
-						v-model="pass_dt"
-						label="Дата выдачи"
-						:rules="rulesPassDt"
-						prependIcon=""
-						prependInnerIcon="$calendar"
-						@update:modelValue="change"
-					/>
-
 					<v-row class="mt-4">
 						<v-col v-if="isNew" cols="12">
 							<v-btn
@@ -261,56 +210,25 @@ watch(
 
 						<template v-else>
 							<v-col cols="6">
-								<v-btn
-									id="delete-btn-activator"
-									color="error"
-									outlined
-									block
+								<DialogTrashEmp
+									:emp="currentEmp"
+									@submit="deleteEmp"
 								>
-									<v-icon left>
-										mdi-delete
-									</v-icon>
-									Удалить
-								</v-btn>
+									<template #activator="{ props }">
+										<v-btn
+											block
+											outlined
+											color="error"
+											v-bind="props"
+										>
+											<v-icon left>
+												mdi-delete
+											</v-icon>
+											Удалить
+										</v-btn>
+									</template>
+								</DialogTrashEmp>
 							</v-col>
-
-							<v-dialog
-								v-model="dialogDelete"
-								maxWidth="400"
-
-								activator="#delete-btn-activator"
-							>
-								<template #default="{ isActive }"> <!-- eslint-disable-line -->
-									<v-card>
-										<template #prepend>
-											<v-icon
-												color="error"
-												icon="mdi-alert-circle"
-											/>
-										</template>
-
-										<template #title>
-											<span class="text-error">Подтверждение удаления</span>
-										</template>
-
-										<v-card-text>
-											{{ `Вы действительно хотите удалить сотрудника ${currentEmp.fio}?` }}
-										</v-card-text>
-
-										<template #actions>
-											<v-spacer />
-
-											<v-btn @click="dialogDelete = false">
-												Нет
-											</v-btn>
-
-											<v-btn color="error" @click="deleteEmp">
-												Да
-											</v-btn>
-										</template>
-									</v-card>
-								</template>
-							</v-dialog>
 
 							<v-col cols="6" class="text-right">
 								<v-btn
@@ -328,7 +246,7 @@ watch(
 							</v-col>
 						</template>
 					</v-row>
-				</v-form>
+				</FormEmp>
 			</v-card-text>
 		</v-card>
 	</v-fade-transition>
