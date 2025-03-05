@@ -1,27 +1,17 @@
 <script setup>
-import { computed } from "vue"
+import { formatFio } from "@/utils/format.js"
 
-const { employees } = defineProps({
+defineProps({
 	employees: {
 		type: Array,
 		required: true,
 	},
 })
-
 const emit = defineEmits(["empSelected"])
 
 function handle(pass_no, pass_ser) {
 	emit("empSelected", pass_no, pass_ser)
 }
-
-const formatFio = computed(() => (fio) => {
-	const [lastName, firstName, middleName] = fio.split(" ")
-
-	const formattedFirstName = firstName ? `${firstName.charAt(0)}.` : ""
-	const formattedMiddleName = middleName ? `${middleName.charAt(0)}.` : ""
-
-	return `${lastName} ${formattedFirstName} ${formattedMiddleName}`.trim()
-})
 </script>
 
 <template>
