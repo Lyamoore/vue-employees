@@ -1,7 +1,13 @@
+<script>
+export default {
+	name: "EmpForm",
+}
+</script>
+
 <script setup>
 import { capitalize } from "lodash"
 import dayjs from "dayjs"
-import { ref, watch } from "vue"
+import { reactive, ref, watch } from "vue"
 import FormEmp from "@/components/FormEmp.vue"
 import DialogTrashEmp from "@/components/DialogTrashEmp.vue"
 
@@ -34,6 +40,14 @@ const fio = ref("")
 const pass_ser = ref("")
 const pass_no = ref("")
 const pass_dt = ref(null)
+
+//todo
+const values = reactive({
+	fio: "",
+	pass_ser: "",
+	pass_no: "",
+	pass_dt: null,
+})
 
 //
 function formatFio(fio) {
@@ -78,9 +92,7 @@ function closeForm() {
 
 async function submit(ev) {
 	try {
-		console.log(">>>", ev) //D
 		const { valid } = await ev
-
 		if (valid) {
 			emit(props.isNew ? "empAdded" : "empChanged", {
 				fio: formatFio(fio.value),
@@ -91,8 +103,8 @@ async function submit(ev) {
 			isChange.value = false
 		}
 	}
-	catch (error) {
-		console.error("Ошибка валидации:", error)
+	catch (err) {
+		console.error("Ошибка валидации:", err)
 	}
 }
 
@@ -123,6 +135,7 @@ watch(
 			maxWidth="400"
 			style="position: relative;"
 		>
+			<!-- todo extract to FormEmpHead -->
 			<v-btn
 				v-if="!isNew"
 				icon
@@ -144,7 +157,9 @@ watch(
 			>
 				<v-icon>mdi-close</v-icon>
 			</v-btn>
+			<!-- todo ^^^ -->
 
+			<!-- todo extract to DialogConfirmDataLost -->
 			<v-dialog
 				v-model="dialogClose"
 				maxWidth="400"
@@ -193,6 +208,7 @@ watch(
 					@change="isChange = true"
 					@submit.prevent="submit"
 				>
+					<!-- todo extract to FormEmpActions -->
 					<v-row class="mt-4">
 						<v-col v-if="isNew" cols="12">
 							<v-btn

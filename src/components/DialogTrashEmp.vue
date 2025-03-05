@@ -33,11 +33,9 @@ const dialog = ref()
 
 				<template #actions>
 					<v-spacer />
-
 					<v-btn @click="() => dialog = false">
 						Нет
 					</v-btn>
-
 					<v-btn color="error" @click="() => emit('submit')">
 						Да
 					</v-btn>
