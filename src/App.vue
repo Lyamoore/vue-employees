@@ -48,8 +48,12 @@ function isDuplicateEmployee(employees, empToCheck) {
 }
 
 function changeEmp(emp) {
-	if (isDuplicateEmployee(employees.value, emp)) {
-		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+	const isPassportChanged =
+        emp.pass_no !== currentEmp.value.pass_no ||
+        emp.pass_ser !== currentEmp.value.pass_ser
+
+	if (isPassportChanged && isDuplicateEmployee(employees.value, emp)) {
+		alert("Сотрудник с такими паспортными данными уже существует!")
 		return
 	}
 
@@ -62,7 +66,7 @@ function changeEmp(emp) {
 
 function addEmp(emp) {
 	if (isDuplicateEmployee(employees.value, emp)) {
-		alert("Сотрудник с такими паспортными данными уже существует, но с другим ФИО!")
+		alert("Сотрудник с такими паспортными данными уже существует!")
 		return
 	}
 
