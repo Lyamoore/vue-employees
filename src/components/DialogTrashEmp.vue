@@ -48,6 +48,3 @@ const dialog = ref()
 		</v-dialog>
 	</div>
 </template>
-
-<style scoped>
-</style>

@@ -10,6 +10,7 @@ import dayjs from "dayjs"
 import { reactive, ref, watch } from "vue"
 import FormEmp from "@/components/FormEmp.vue"
 import DialogTrashEmp from "@/components/DialogTrashEmp.vue"
+import FormEmpHead from "./FormEmpHead.vue"
 
 const props = defineProps({
 	currentEmp: {
@@ -135,135 +136,117 @@ watch(
 			maxWidth="400"
 			style="position: relative;"
 		>
-			<!-- todo extract to FormEmpHead -->
-			<v-btn
-				v-if="!isNew"
-				icon
-				size="small"
-				style="position: absolute; top: 8px; right: 40px; z-index: 1;"
-				variant="text"
-				@click="duplicateForm"
+			<FormEmpHead
+				:isNew="isNew"
+				@duplicateForm="duplicateForm"
+				@closeForm="closeForm"
 			>
-				<v-icon>mdi-content-copy</v-icon>
-			</v-btn>
-
-			<v-btn
-				id="save-btn-activator"
-				icon
-				size="small"
-				style="position: absolute; top: 8px; right: 8px; z-index: 1;"
-				variant="text"
-				@click="closeForm"
-			>
-				<v-icon>mdi-close</v-icon>
-			</v-btn>
-			<!-- todo ^^^ -->
-
-			<!-- todo extract to DialogConfirmDataLost -->
-			<v-dialog
-				v-model="dialogClose"
-				maxWidth="400"
-			>
-				<v-card>
-					<template #prepend>
-						<v-icon
-							color="warning"
-							icon="mdi-alert"
-						/>
-					</template>
-
-					<template #title>
-						<span class="text-warning">Несохраненные изменения</span>
-					</template>
-
-					<v-card-text>
-						У вас есть несохраненные изменения. Вы уверены, что хотите продолжить?
-					</v-card-text>
-
-					<v-card-actions>
-						<v-spacer />
-						<v-btn @click="dialogClose = false">
-							Отмена
-						</v-btn>
-						<v-btn
-							color="primary"
-							@click="confirmAction"
-						>
-							Продолжить
-						</v-btn>
-					</v-card-actions>
-				</v-card>
-			</v-dialog>
-
-			<v-card-title class="text-center" style="padding-top: 50px; padding-bottom: 20px;">
-				{{ isNew ? 'Новый сотрудник' : 'Редактирование сотрудника' }}
-			</v-card-title>
-
-			<v-card-text>
-				<FormEmp
-					v-model:fio="fio"
-					v-model:pass_ser="pass_ser"
-					v-model:pass_no="pass_no"
-					v-model:pass_dt="pass_dt"
-					@change="isChange = true"
-					@submit.prevent="submit"
+				<!-- todo extract to DialogConfirmDataLost -->
+				<v-dialog
+					v-model="dialogClose"
+					maxWidth="400"
 				>
-					<!-- todo extract to FormEmpActions -->
-					<v-row class="mt-4">
-						<v-col v-if="isNew" cols="12">
-							<v-btn
-								:disabled="!isChange"
-								type="submit"
-								color="primary"
-								block
-							>
-								<v-icon left>
-									mdi-plus
-								</v-icon>
-								Добавить
+					<v-card>
+						<template #prepend>
+							<v-icon
+								color="warning"
+								icon="mdi-alert"
+							/>
+						</template>
+
+						<template #title>
+							<span class="text-warning">Несохраненные изменения</span>
+						</template>
+
+						<v-card-text>
+							У вас есть несохраненные изменения. Вы уверены, что хотите продолжить?
+						</v-card-text>
+
+						<v-card-actions>
+							<v-spacer />
+							<v-btn @click="dialogClose = false">
+								Отмена
 							</v-btn>
-						</v-col>
+							<v-btn
+								color="primary"
+								@click="confirmAction"
+							>
+								Продолжить
+							</v-btn>
+						</v-card-actions>
+					</v-card>
+				</v-dialog>
 
-						<template v-else>
-							<v-col cols="6">
-								<DialogTrashEmp
-									:emp="currentEmp"
-									@submit="deleteEmp"
-								>
-									<template #activator="{ props }">
-										<v-btn
-											block
-											outlined
-											color="error"
-											v-bind="props"
-										>
-											<v-icon left>
-												mdi-delete
-											</v-icon>
-											Удалить
-										</v-btn>
-									</template>
-								</DialogTrashEmp>
-							</v-col>
+				<v-card-title class="text-center" style="padding-top: 50px; padding-bottom: 20px;">
+					{{ isNew ? 'Новый сотрудник' : 'Редактирование сотрудника' }}
+				</v-card-title>
 
-							<v-col cols="6" class="text-right">
+				<v-card-text>
+					<FormEmp
+						v-model:fio="fio"
+						v-model:pass_ser="pass_ser"
+						v-model:pass_no="pass_no"
+						v-model:pass_dt="pass_dt"
+						@change="isChange = true"
+						@submit.prevent="submit"
+					>
+						<!-- todo extract to FormEmpActions -->
+						<v-row class="mt-4">
+							<v-col v-if="isNew" cols="12">
 								<v-btn
 									:disabled="!isChange"
 									type="submit"
 									color="primary"
-									outlined
 									block
 								>
 									<v-icon left>
-										mdi-pencil
+										mdi-plus
 									</v-icon>
-									Изменить
+									Добавить
 								</v-btn>
 							</v-col>
-						</template>
-					</v-row>
-				</FormEmp>
-			</v-card-text>
+
+							<template v-else>
+								<v-col cols="6">
+									<DialogTrashEmp
+										:emp="currentEmp"
+										@submit="deleteEmp"
+									>
+										<template #activator="{ props }">
+											<v-btn
+												block
+												outlined
+												color="error"
+												v-bind="props"
+											>
+												<v-icon left>
+													mdi-delete
+												</v-icon>
+												Удалить
+											</v-btn>
+										</template>
+									</DialogTrashEmp>
+								</v-col>
+
+								<v-col cols="6" class="text-right">
+									<v-btn
+										:disabled="!isChange"
+										type="submit"
+										color="primary"
+										outlined
+										block
+									>
+										<v-icon left>
+											mdi-pencil
+										</v-icon>
+										Изменить
+									</v-btn>
+								</v-col>
+							</template>
+						</v-row>
+					</FormEmp>
+				</v-card-text>
+			</formemphead>
 		</v-card>
 	</v-fade-transition>
 </template>
