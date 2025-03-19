@@ -53,7 +53,7 @@ const change = () => emit("change")
 		/>
 		<v-text-field
 			v-model.number="pass_ser"
-			label="Номер паспорта"
+			label="Серия паспорта"
 			:rules="rulesPassSer"
 			outlined
 			dense
@@ -61,7 +61,7 @@ const change = () => emit("change")
 		/>
 		<v-text-field
 			v-model.number="pass_no"
-			label="Серия паспорта"
+			label="Номер паспорта"
 			:rules="rulesPassNo"
 			outlined
 			dense
