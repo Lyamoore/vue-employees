@@ -8,6 +8,8 @@ const employees = useStorage("empStore", [])
 const currentEmp = ref(null)
 const isNew = ref(false)
 
+const snackbar = ref(false)
+
 function setCurrentEmp(pass_no, pass_ser) {
 	currentEmp.value = employees.value.find(
 		(emp) => emp.pass_no === pass_no && emp.pass_ser === pass_ser,
@@ -53,7 +55,7 @@ function changeEmp(emp) {
         emp.pass_ser !== currentEmp.value.pass_ser
 
 	if (isPassportChanged && isDuplicateEmployee(employees.value, emp)) {
-		alert("Сотрудник с такими паспортными данными уже существует!")
+		snackbar.value = true
 		return
 	}
 
@@ -66,7 +68,7 @@ function changeEmp(emp) {
 
 function addEmp(emp) {
 	if (isDuplicateEmployee(employees.value, emp)) {
-		alert("Сотрудник с такими паспортными данными уже существует!")
+		snackbar.value = true
 		return
 	}
 
@@ -99,6 +101,14 @@ function closeForm() {
 	<v-app>
 		<v-main>
 			<v-container fluid>
+				<v-snackbar
+					v-model="snackbar"
+					:timeout="2000"
+					color="error"
+				>
+					Сотрудник с такими паспортными данными уже существует!
+				</v-snackbar>
+
 				<v-row>
 					<v-col
 						cols="12"
